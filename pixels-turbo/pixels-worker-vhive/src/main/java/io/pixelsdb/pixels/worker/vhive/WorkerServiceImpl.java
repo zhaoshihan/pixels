@@ -1,6 +1,9 @@
 package io.pixelsdb.pixels.worker.vhive;
 
+import com.alibaba.fastjson.JSON;
 import io.grpc.stub.StreamObserver;
+import io.pixelsdb.pixels.common.turbo.HelloInput;
+import io.pixelsdb.pixels.common.turbo.HelloOutput;
 import io.pixelsdb.pixels.common.turbo.WorkerType;
 import io.pixelsdb.pixels.planner.plan.physical.input.*;
 import io.pixelsdb.pixels.planner.plan.physical.output.AggregationOutput;
@@ -63,6 +66,22 @@ public class WorkerServiceImpl extends vHiveWorkerServiceGrpc.vHiveWorkerService
             {
                 ServiceImpl<ScanWorker, ScanInput, ScanOutput> service = new ServiceImpl<>(ScanWorker.class, ScanInput.class);
                 service.execute(request, responseObserver);
+                break;
+            }
+            case HELLO: {
+                HelloInput input = JSON.parseObject(request.getJson(), HelloInput.class);
+                HelloOutput output = new HelloOutput();
+                output.setContent(String.format("%s,%s", "hello", input.getContent()));
+                TurboProto.WorkerResponse response = TurboProto.WorkerResponse.newBuilder()
+                        .setJson(JSON.toJSONString(output))
+                        .build();
+                try {
+                    Thread.sleep(60 * 1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
                 break;
             }
             default:

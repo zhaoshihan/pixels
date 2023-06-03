@@ -2,16 +2,14 @@ package io.pixelsdb.pixels.invoker.vhive;
 
 import com.alibaba.fastjson.JSON;
 import io.pixelsdb.pixels.common.physical.Storage;
-import io.pixelsdb.pixels.common.turbo.InvokerFactory;
-import io.pixelsdb.pixels.common.turbo.Output;
-import io.pixelsdb.pixels.common.turbo.WorkerType;
-import io.pixelsdb.pixels.invoker.vhive.utils.Utils;
+import io.pixelsdb.pixels.common.turbo.*;
 import io.pixelsdb.pixels.planner.plan.physical.domain.StorageInfo;
 import org.apache.commons.cli.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -75,30 +73,42 @@ public class Main
             for (int i = 0; i < Integer.parseInt(number); ++i)
             {
                 final CompletableFuture<Output> completableFuture;
+                final Input input;
                 long startTime = System.nanoTime();
                 switch (function)
                 {
                     case "Aggregation":
-                        completableFuture = factory.getInvoker(WorkerType.AGGREGATION).invoke(Utils.genAggregationInput(storageInfo));
+                        input = Utils.genAggregationInput(storageInfo);
+                        completableFuture = factory.getInvoker(WorkerType.AGGREGATION).invoke(input);
                         break;
                     case "BroadcastChainJoin":
-                        completableFuture = factory.getInvoker(WorkerType.BROADCAST_CHAIN_JOIN).invoke(Utils.genBroadcastChainJoinInput(storageInfo));
+                        input = Utils.genBroadcastChainJoinInput(storageInfo);
+                        completableFuture = factory.getInvoker(WorkerType.BROADCAST_CHAIN_JOIN).invoke(input);
                         break;
                     case "BroadcastJoin":
-                        completableFuture = factory.getInvoker(WorkerType.BROADCAST_JOIN).invoke(Utils.genBroadcastJoinInput(storageInfo));
+                        input = Utils.genBroadcastJoinInput(storageInfo);
+                        completableFuture = factory.getInvoker(WorkerType.BROADCAST_JOIN).invoke(input);
                         break;
                     case "PartitionChainJoin":
-                        completableFuture = factory.getInvoker(WorkerType.PARTITIONED_CHAIN_JOIN).invoke(Utils.genPartitionedChainJoinInput(storageInfo));
+                        input = Utils.genPartitionedChainJoinInput(storageInfo);
+                        completableFuture = factory.getInvoker(WorkerType.PARTITIONED_CHAIN_JOIN).invoke(input);
                         break;
                     case "PartitionJoin":
-                        completableFuture = factory.getInvoker(WorkerType.PARTITIONED_JOIN).invoke(Utils.genPartitionedJoinInput(storageInfo));
+                        input = Utils.genPartitionedJoinInput(storageInfo);
+                        completableFuture = factory.getInvoker(WorkerType.PARTITIONED_JOIN).invoke(input);
                         break;
                     case "Partition":
                         assert Utils.genPartitionInput("order") != null;
-                        completableFuture = factory.getInvoker(WorkerType.PARTITION).invoke(Utils.genPartitionInput("order").apply(storageInfo, 0));
+                        input = Utils.genPartitionInput("order").apply(storageInfo, 0);
+                        completableFuture = factory.getInvoker(WorkerType.PARTITION).invoke(input);
                         break;
                     case "Scan":
-                        completableFuture = factory.getInvoker(WorkerType.SCAN).invoke(Utils.genScanInput(storageInfo, 0));
+                        input = Utils.genScanInput(storageInfo, 0);
+                        completableFuture = factory.getInvoker(WorkerType.SCAN).invoke(input);
+                        break;
+                    case "Hello":
+                        input = new HelloInput(-1, String.valueOf(UUID.randomUUID()));
+                        completableFuture = factory.getInvoker(WorkerType.HELLO).invoke(input);
                         break;
                     default:
                         throw new ParseException("invalid function name");
@@ -111,9 +121,9 @@ public class Main
                         {
                             Output output = completableFuture.get();
                             long endTime = System.nanoTime();
-                            synchronized (System.out)
-                            {
-                                System.out.println(JSON.toJSONString(output));
+                            synchronized (System.out) {
+                                System.out.println("Input: " + JSON.toJSONString(input));
+                                System.out.println("Output: " + JSON.toJSONString(output));
                                 System.out.println("Invoke time(MS): " + (invokeEnd - startTime) / 1000000);
                                 System.out.println("Entire round trip time(MS): " + (endTime - startTime) / 1000000);
                                 System.out.println();

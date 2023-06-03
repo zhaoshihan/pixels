@@ -5,3 +5,4 @@ io.pixelsdb.pixels.invoker.vhive.PartitionChainJoinInvokerProvider
 io.pixelsdb.pixels.invoker.vhive.BroadcastJoinInvokerProvider
 io.pixelsdb.pixels.invoker.vhive.BroadcastChainJoinInvokerProvider
 io.pixelsdb.pixels.invoker.vhive.AggregationInvokerProvider
+io.pixelsdb.pixels.invoker.vhive.HelloInvokerProvider

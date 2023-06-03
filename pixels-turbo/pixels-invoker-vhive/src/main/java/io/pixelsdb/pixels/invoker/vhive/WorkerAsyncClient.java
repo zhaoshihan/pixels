@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.pixelsdb.pixels.common.turbo.HelloInput;
 import io.pixelsdb.pixels.common.turbo.WorkerType;
 import io.pixelsdb.pixels.planner.plan.physical.input.*;
 import io.pixelsdb.pixels.turbo.TurboProto;
@@ -47,8 +48,15 @@ public class WorkerAsyncClient
         return this.stub.getMemory(request);
     }
 
-    public ListenableFuture<TurboProto.WorkerResponse> aggregation(AggregationInput input)
-    {
+    public ListenableFuture<TurboProto.WorkerResponse> hello(HelloInput input) {
+        TurboProto.WorkerRequest request = TurboProto.WorkerRequest.newBuilder()
+                .setWorkerType(String.valueOf(WorkerType.HELLO))
+                .setJson(JSON.toJSONString(input, SerializerFeature.DisableCircularReferenceDetect))
+                .build();
+        return this.stub.process(request);
+    }
+
+    public ListenableFuture<TurboProto.WorkerResponse> aggregation(AggregationInput input) {
         TurboProto.WorkerRequest request = TurboProto.WorkerRequest.newBuilder()
                 .setWorkerType(String.valueOf(WorkerType.AGGREGATION))
                 .setJson(JSON.toJSONString(input, SerializerFeature.DisableCircularReferenceDetect))
