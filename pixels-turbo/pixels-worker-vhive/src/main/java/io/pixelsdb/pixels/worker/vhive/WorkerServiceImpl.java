@@ -14,8 +14,11 @@ import io.pixelsdb.pixels.turbo.TurboProto;
 import io.pixelsdb.pixels.turbo.vHiveWorkerServiceGrpc;
 import io.pixelsdb.pixels.worker.vhive.utils.ServiceImpl;
 
+import java.util.UUID;
+
 public class WorkerServiceImpl extends vHiveWorkerServiceGrpc.vHiveWorkerServiceImplBase
 {
+    private static final String SERVICE_ID = String.valueOf(UUID.randomUUID());
     public WorkerServiceImpl()
     {
     }
@@ -72,6 +75,7 @@ public class WorkerServiceImpl extends vHiveWorkerServiceGrpc.vHiveWorkerService
                 HelloInput input = JSON.parseObject(request.getJson(), HelloInput.class);
                 HelloOutput output = new HelloOutput();
                 output.setContent(String.format("%s,%s", "hello", input.getContent()));
+                output.setRequestId(SERVICE_ID);
                 TurboProto.WorkerResponse response = TurboProto.WorkerResponse.newBuilder()
                         .setJson(JSON.toJSONString(output))
                         .build();
