@@ -13,12 +13,16 @@ import io.pixelsdb.pixels.planner.plan.physical.output.ScanOutput;
 import io.pixelsdb.pixels.turbo.TurboProto;
 import io.pixelsdb.pixels.turbo.vHiveWorkerServiceGrpc;
 import io.pixelsdb.pixels.worker.vhive.utils.ServiceImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
 
 public class WorkerServiceImpl extends vHiveWorkerServiceGrpc.vHiveWorkerServiceImplBase
 {
     private static final String SERVICE_ID = String.valueOf(UUID.randomUUID());
+
+    private static final Logger log = LogManager.getLogger(WorkerServiceImpl.class);
     public WorkerServiceImpl()
     {
     }
@@ -72,18 +76,23 @@ public class WorkerServiceImpl extends vHiveWorkerServiceGrpc.vHiveWorkerService
                 break;
             }
             case HELLO: {
+                log.info(String.format("get input successfully: %s", request.getJson()));
                 HelloInput input = JSON.parseObject(request.getJson(), HelloInput.class);
+
+                log.info("try to sleep");
+                try {
+                    Thread.sleep(60 * 1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                log.info("wake up");
                 HelloOutput output = new HelloOutput();
                 output.setContent(String.format("%s,%s", "hello", input.getContent()));
                 output.setRequestId(SERVICE_ID);
                 TurboProto.WorkerResponse response = TurboProto.WorkerResponse.newBuilder()
                         .setJson(JSON.toJSONString(output))
                         .build();
-                try {
-                    Thread.sleep(60 * 1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                log.info(String.format("get output successfully: %s", response.getJson()));
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
                 break;
